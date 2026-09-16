@@ -1,0 +1,67 @@
+{
+    "name": "billto/billto-php",
+    "description": "Official PHP SDK for the BillTo API - invoices, KSeF, orders, contractors, products, warehouse and incoming (cost) invoices.",
+    "keywords": ["billto", "sdk", "api", "invoicing", "ksef", "e-invoicing", "poland", "psr-18"],
+    "type": "library",
+    "license": "MIT",
+    "homepage": "https://billto.pl/developers",
+    "support": {
+        "docs": "https://billto.pl/developers",
+        "source": "https://github.com/nozugroup/billto-php",
+        "issues": "https://github.com/nozugroup/billto-php/issues",
+        "email": "kontakt@billto.pl"
+    },
+    "require": {
+        "php": "^8.2",
+        "ext-json": "*",
+        "php-http/discovery": "^1.19",
+        "psr/http-client": "^1.0",
+        "psr/http-client-implementation": "*",
+        "psr/http-factory": "^1.0",
+        "psr/http-factory-implementation": "*",
+        "psr/http-message": "^1.1 || ^2.0"
+    },
+    "require-dev": {
+        "guzzlehttp/guzzle": "^7.8",
+        "laravel/pint": "^1.18",
+        "nyholm/psr7": "^1.8",
+        "pestphp/pest": "^3.0",
+        "phpstan/phpstan": "^2.0"
+    },
+    "suggest": {
+        "guzzlehttp/guzzle": "Default HTTP client (PSR-18) - any psr/http-client implementation works.",
+        "illuminate/support": "Laravel integration: BillTo\\Laravel\\BillToServiceProvider and the BillTo facade."
+    },
+    "autoload": {
+        "psr-4": {
+            "BillTo\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "BillTo\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": ["BillTo\\Laravel\\BillToServiceProvider"],
+            "aliases": {"BillTo": "BillTo\\Laravel\\Facades\\BillTo"}
+        }
+    },
+    "scripts": {
+        "test": "pest",
+        "lint": "pint --test",
+        "fix": "pint",
+        "analyse": "phpstan analyse",
+        "check": ["@lint", "@analyse", "@test"]
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "php-http/discovery": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
