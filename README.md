@@ -8,11 +8,13 @@ Official PHP client for the [BillTo](https://billto.pl) API: sales invoices, KSe
 orders (pay-then-invoice), contractors, products, warehouse and incoming (cost) invoices.
 
 - PHP 8.2+, PSR-18 / PSR-17 - bring your own HTTP client (Guzzle, Symfony HttpClient, ...)
-- Automatic `Idempotency-Key` on every mutation, retries with backoff for throttling and outages
+- Automatic `Idempotency-Key` on POST/PUT/PATCH requests, retries with backoff for throttling and outages
 - Typed exceptions per HTTP status, lazy pagination, IDE-friendly entities
 - Optional Laravel service provider and facade
 
-API reference: [billto.pl/developers](https://billto.pl/developers) - OpenAPI: [billto.pl/docs/api](https://billto.pl/docs/api)
+API reference: [billto.pl/developers](https://billto.pl/developers) - OpenAPI: [billto.pl/api.json](https://billto.pl/api.json/#/)
+
+Other clients: [Node.js SDK](https://github.com/nozugroup/billto-node) · [Python SDK](https://github.com/nozugroup/billto-python)
 
 ## Installation
 
@@ -25,6 +27,9 @@ Any `psr/http-client-implementation` works instead of Guzzle; it is discovered a
 ## Quick start
 
 Generate a team token in BillTo under **Settings -> API tokens** and pick the scopes you need.
+Set `BILLTO_TOKEN` in the process environment. This example creates an issued invoice in the
+sandbox; use a sandbox token and replace the sample dates and buyer details.
+Load Composer with `require 'vendor/autoload.php';` in standalone scripts.
 
 ```php
 use BillTo\BillTo;
@@ -32,11 +37,14 @@ use BillTo\Enums\InvoiceType;
 use BillTo\Enums\PaymentMethod;
 use BillTo\Enums\VatRate;
 
-$billto = BillTo::create('blto_...');
+$token = getenv('BILLTO_TOKEN') ?: throw new RuntimeException('Set BILLTO_TOKEN first.');
+$billto = BillTo::sandbox($token);
+$series = $billto->invoiceSeries()->default()
+    ?? throw new RuntimeException('Configure a default VAT series in the sandbox first.');
 
 $invoice = $billto->invoices()->create([
     'type' => InvoiceType::VAT->value,
-    'series_id' => $billto->invoiceSeries()->default()->id,
+    'series_id' => $series->id,
     'issue' => true,
     'issue_date' => '2026-09-14',
     'payment_method' => PaymentMethod::Transfer->value,
@@ -51,10 +59,10 @@ $invoice = $billto->invoices()->create([
 echo $invoice->invoice_number;        // FV/1/09/2026
 echo $invoice->totals['gross'];       // 1845.00
 
-$billto->invoices()->pdf($invoice->id)->saveTo('/tmp/invoice.pdf');
+$billto->invoices()->pdf($invoice->id)->saveTo('invoice.pdf');
 ```
 
-Use `BillTo::sandbox($token)` against `sandbox.billto.pl`.
+Use `BillTo::create($token)` for production or `BillTo::sandbox($token)` against `sandbox.billto.pl`.
 
 ## Resources
 
@@ -75,7 +83,7 @@ the single source of truth for field names.
 
 ## Entities
 
-Every response is wrapped in a lightweight entity. Fields are available as properties, array keys
+Resource methods return entities, pages, action results or binary files as appropriate. Fields are available as properties, array keys
 or dot paths, and each entity documents its fields with `@property-read` for autocompletion.
 
 ```php
@@ -88,10 +96,35 @@ $invoice->items();                      // list<InvoiceItem>
 $invoice->toArray();
 ```
 
+Missing optional properties return `null`. Collection helpers such as `items()` return `[]`,
+and single-relation helpers such as `buyer()` return `null` when the relation is absent.
+Nullable timestamps and optional relations are reflected in the entity annotations.
+
+## Dates and money
+
+Calendar inputs such as payment dates, report ranges and exchange-rate dates accept
+`YYYY-MM-DD` strings or `DateTimeInterface`. Date objects retain their calendar date in
+their own time zone; no implicit UTC conversion is performed.
+
+```php
+$billto->invoices()->recordPayment(
+    $invoice->id,
+    '184.50',
+    paidAt: '2026-10-03',
+    paymentMethod: 'transfer',
+);
+```
+
+Amounts can be supplied as decimal strings or floats. For exact monetary calculations,
+keep response strings and use a decimal arithmetic library. `amount()`, `grossTotal()` and
+`remainingAmount()` are convenience helpers returning `float|null`.
+
 ## Pagination
 
 `list()` returns one `Page`; `all()` returns a lazy `Paginator` that fetches the next page only
-when iteration reaches it.
+when iteration reaches it. Explicit pagination arguments override `page` and `per_page`
+entries in filters. `all()` starts at page 1, and the paginator rejects a response reporting
+a different page to avoid repeating records indefinitely.
 
 ```php
 $page = $billto->invoices()->list(['status' => 'issued'], page: 1, perPage: 50);
@@ -125,7 +158,7 @@ separately rather than notifying you once.
 $config = (new \BillTo\Config('blto_...'))
     ->identify('MyERP', '2.1.0', 'https://myerp.example/contact');
 
-// MyERP/2.1.0 (+https://myerp.example/contact; compat=2026-09-15) billto-php/0.1.0
+// MyERP/2.1.0 (+https://myerp.example/contact; compat=2026-09-15) billto-php/1.0.0
 ```
 
 - **product** - a stable name; do not change it between releases, it is how your installations
@@ -141,9 +174,10 @@ Requests that do not identify the integration currently succeed and come back wi
 
 ## Idempotency and retries
 
-Every `POST`/`PUT` gets a random `Idempotency-Key` unless you pass your own. The API replays the
-first successful response for 24 hours, so a retried request never creates a second document.
-Pass your own key when the operation is driven by an external event:
+Every `POST`/`PUT`/`PATCH` gets a random `Idempotency-Key` unless you pass your own.
+The same key and body are reused during retries; separate calls get separate keys.
+The API controls the retention period and semantics of replayed responses.
+Pass your own stable key when the operation is driven by an external event:
 
 ```php
 use BillTo\Http\IdempotencyKey;
@@ -159,6 +193,36 @@ retried. Mutations without an idempotency key are never retried.
 $config = (new \BillTo\Config('blto_...'))->withMaxRetries(4)->withAutoIdempotency(false);
 $billto = BillTo::fromConfig($config);
 ```
+
+## Response diagnostics
+
+Attach your own correlation ID and observe response headers without bypassing resource methods:
+
+```php
+use BillTo\Config;
+use BillTo\Http\ApiResponse;
+
+$config = (new Config($token, Config::SANDBOX_BASE_URL))
+    ->identify('MyShop', '1.0.0', 'integrations@example.com')
+    ->withCorrelationId('checkout-123');
+
+$observedClient = BillTo::fromConfig(
+    $config,
+    onResponse: static function (ApiResponse $response): void {
+        error_log('BillTo HTTP '.$response->status.' trace='.($response->header('X-Trace-Id') ?? '-'));
+    },
+);
+```
+
+`onResponse` receives every HTTP response, including failed attempts and binary downloads,
+before normal response handling. Network failures have no response to observe. If the callback
+throws, the operation aborts without retrying; catch logging failures inside the callback if
+they should not abort it. `withCorrelationId(null)` removes the header. Configuration withers
+return new objects, so create the client from the returned configuration.
+
+The observer is also available as the `onResponse` argument to `BillTo::create()` and
+`BillTo::sandbox()`. API exceptions expose the response through `$exception->response`,
+including `$exception->response->header('X-Trace-Id')`.
 
 ## Errors
 
