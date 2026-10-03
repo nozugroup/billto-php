@@ -36,12 +36,18 @@ final class Transport
     /** @var callable(): string */
     private $keyGenerator;
 
+    /** @var (callable(ApiResponse): void)|null */
+    private $onResponse;
+
+    /** @param (callable(ApiResponse): void)|null $onResponse Called for every HTTP response; exceptions abort without retrying. */
     public function __construct(
         private readonly Config $config,
         ?ClientInterface $http = null,
         ?RequestFactoryInterface $requestFactory = null,
         ?StreamFactoryInterface $streamFactory = null,
+        ?callable $onResponse = null,
     ) {
+        $this->onResponse = $onResponse;
         $this->http = $http ?? Psr18ClientDiscovery::find();
         $this->requestFactory = $requestFactory ?? Psr17FactoryDiscovery::findRequestFactory();
         $this->streamFactory = $streamFactory ?? Psr17FactoryDiscovery::findStreamFactory();
@@ -153,6 +159,10 @@ final class Transport
 
             $response = self::toApiResponse($psrResponse);
 
+            if ($this->onResponse !== null) {
+                ($this->onResponse)($response);
+            }
+
             if ($response->status < 400) {
                 return $response;
             }
@@ -188,12 +198,16 @@ final class Transport
             ->withHeader('Accept', $accept)
             ->withHeader('User-Agent', $this->config->userAgent);
 
+        if ($this->config->correlationId !== null) {
+            $request = $request->withHeader('X-Correlation-Id', $this->config->correlationId);
+        }
+
         if ($idempotencyKey !== null) {
             $request = $request->withHeader('Idempotency-Key', $idempotencyKey);
         }
 
         if ($body !== null) {
-            $json = json_encode($body, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            $json = json_encode($body === [] ? (object) [] : $body, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
             $request = $request
                 ->withHeader('Content-Type', 'application/json')
                 ->withBody($this->streamFactory->createStream($json));

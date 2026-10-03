@@ -17,10 +17,10 @@ namespace BillTo\Entities;
  * @property-read string $tax_country_code
  * @property-read string|null $client_number
  * @property-read string|null $price_group_id
- * @property-read list<array{id: string, type: string, country_code: string, postal_code: string|null, locality: string|null, street: string|null, building_number: string|null, unit_number: string|null}> $addresses
+ * @property-read list<array{id: string, type: string, country_code: string, postal_code: string|null, locality: string|null, street: string|null, building_number: string|null, unit_number: string|null}>|null $addresses
  * @property-read array<string, mixed>|null $payment_score Only present with `include=score`.
- * @property-read string $created_at
- * @property-read string $updated_at
+ * @property-read string|null $created_at
+ * @property-read string|null $updated_at
  */
 final class Contractor extends Entity
 {

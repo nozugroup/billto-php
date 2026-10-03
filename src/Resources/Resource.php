@@ -60,7 +60,7 @@ abstract class Resource
      */
     protected function paginate(string $path, array $filters, string $entity, int $perPage): Paginator
     {
-        return new Paginator(fn (int $page): Page => $this->page($path, $filters + ['page' => $page, 'per_page' => $perPage], $entity));
+        return new Paginator(fn (int $page): Page => $this->page($path, array_replace($filters, ['page' => $page, 'per_page' => $perPage]), $entity));
     }
 
     /**

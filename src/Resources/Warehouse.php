@@ -33,7 +33,7 @@ final class Warehouse extends Resource
      */
     public function stocks(array $filters = [], int $page = 1, int $perPage = 15): Page
     {
-        return $this->page('warehouse/stocks', $filters + ['page' => $page, 'per_page' => $perPage], StockLevel::class);
+        return $this->page('warehouse/stocks', array_replace($filters, ['page' => $page, 'per_page' => $perPage]), StockLevel::class);
     }
 
     /**
@@ -53,7 +53,7 @@ final class Warehouse extends Resource
      */
     public function movements(array $filters = [], int $page = 1, int $perPage = 15): Page
     {
-        return $this->page('warehouse/movements', $filters + ['page' => $page, 'per_page' => $perPage], StockMovement::class);
+        return $this->page('warehouse/movements', array_replace($filters, ['page' => $page, 'per_page' => $perPage]), StockMovement::class);
     }
 
     /**

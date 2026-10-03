@@ -42,9 +42,9 @@ use BillTo\Enums\IncomingInvoiceStatus;
  * @property-read bool $split_payment
  * @property-read bool $has_xml
  * @property-read bool $has_file
- * @property-read list<array<string, mixed>> $lines
- * @property-read string $created_at
- * @property-read string $updated_at
+ * @property-read list<array<string, mixed>>|null $lines
+ * @property-read string|null $created_at
+ * @property-read string|null $updated_at
  */
 final class IncomingInvoice extends Entity
 {

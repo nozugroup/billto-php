@@ -45,6 +45,7 @@ final class Config
         public readonly float $retryBaseDelay = 0.5,
         public readonly float $maxRetryDelay = 10.0,
         public readonly string $userAgent = self::DEFAULT_USER_AGENT,
+        public readonly ?string $correlationId = null,
     ) {
         if (trim($token) === '') {
             throw new \InvalidArgumentException('BillTo API token must not be empty.');
@@ -54,29 +55,38 @@ final class Config
             throw new \InvalidArgumentException("Invalid API base URL: {$baseUrl}");
         }
 
+        if ($correlationId !== null && (trim($correlationId) === '' || preg_match('/[^\x20-\x7e]/', $correlationId))) {
+            throw new \InvalidArgumentException('Invalid X-Correlation-Id.');
+        }
+
         if ($maxRetries < 0) {
             throw new \InvalidArgumentException('maxRetries must not be negative.');
         }
     }
 
+    public function withCorrelationId(?string $correlationId): self
+    {
+        return new self($this->token, $this->baseUrl, $this->maxRetries, $this->autoIdempotency, $this->retryBaseDelay, $this->maxRetryDelay, $this->userAgent, $correlationId);
+    }
+
     public function withBaseUrl(string $baseUrl): self
     {
-        return new self($this->token, $baseUrl, $this->maxRetries, $this->autoIdempotency, $this->retryBaseDelay, $this->maxRetryDelay, $this->userAgent);
+        return new self($this->token, $baseUrl, $this->maxRetries, $this->autoIdempotency, $this->retryBaseDelay, $this->maxRetryDelay, $this->userAgent, $this->correlationId);
     }
 
     public function withMaxRetries(int $maxRetries): self
     {
-        return new self($this->token, $this->baseUrl, $maxRetries, $this->autoIdempotency, $this->retryBaseDelay, $this->maxRetryDelay, $this->userAgent);
+        return new self($this->token, $this->baseUrl, $maxRetries, $this->autoIdempotency, $this->retryBaseDelay, $this->maxRetryDelay, $this->userAgent, $this->correlationId);
     }
 
     public function withAutoIdempotency(bool $enabled): self
     {
-        return new self($this->token, $this->baseUrl, $this->maxRetries, $enabled, $this->retryBaseDelay, $this->maxRetryDelay, $this->userAgent);
+        return new self($this->token, $this->baseUrl, $this->maxRetries, $enabled, $this->retryBaseDelay, $this->maxRetryDelay, $this->userAgent, $this->correlationId);
     }
 
     public function withUserAgent(string $userAgent): self
     {
-        return new self($this->token, $this->baseUrl, $this->maxRetries, $this->autoIdempotency, $this->retryBaseDelay, $this->maxRetryDelay, $userAgent);
+        return new self($this->token, $this->baseUrl, $this->maxRetries, $this->autoIdempotency, $this->retryBaseDelay, $this->maxRetryDelay, $userAgent, $this->correlationId);
     }
 
     /**

@@ -12,6 +12,6 @@ namespace BillTo\Entities;
  * @property-read string $paid_at
  * @property-read string|null $payment_method
  * @property-read string|null $note
- * @property-read string $created_at
+ * @property-read string|null $created_at
  */
 final class InvoicePayment extends Entity {}

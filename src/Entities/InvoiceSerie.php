@@ -11,7 +11,7 @@ namespace BillTo\Entities;
  * @property-read string $type
  * @property-read string $code
  * @property-read string $name
- * @property-read string $pattern
+ * @property-read string|null $pattern
  * @property-read bool $is_default
  * @property-read bool $is_active
  */

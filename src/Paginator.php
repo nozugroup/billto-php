@@ -53,6 +53,10 @@ final class Paginator implements \IteratorAggregate
             /** @var Page<T> $page */
             $page = ($this->fetchPage)($pageNumber);
 
+            if ($page->currentPage !== $pageNumber) {
+                throw new \UnexpectedValueException('Pagination did not return the requested page.');
+            }
+
             yield $page;
 
             $pageNumber = $page->nextPage();

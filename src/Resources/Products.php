@@ -22,7 +22,7 @@ final class Products extends Resource
      */
     public function list(array $filters = [], int $page = 1, int $perPage = 15): Page
     {
-        return $this->page('products', $filters + ['page' => $page, 'per_page' => $perPage], Product::class);
+        return $this->page('products', array_replace($filters, ['page' => $page, 'per_page' => $perPage]), Product::class);
     }
 
     /**

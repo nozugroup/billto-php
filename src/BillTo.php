@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace BillTo;
 
+use BillTo\Http\ApiResponse;
 use BillTo\Http\Transport;
 use BillTo\Resources\BankAccounts;
 use BillTo\Resources\Contractors;
@@ -62,6 +63,8 @@ final class BillTo
      *
      * The HTTP client and PSR-17 factories are auto-discovered (php-http/discovery),
      * so having e.g. guzzlehttp/guzzle installed is enough. They can also be passed explicitly.
+     *
+     * @param  (callable(ApiResponse): void)|null  $onResponse  Called for every response, including retries; exceptions abort without retrying.
      */
     public static function create(
         string $token,
@@ -69,25 +72,32 @@ final class BillTo
         ?ClientInterface $httpClient = null,
         ?RequestFactoryInterface $requestFactory = null,
         ?StreamFactoryInterface $streamFactory = null,
+        ?callable $onResponse = null,
     ): self {
         $config = new Config($token, $baseUrl ?? Config::DEFAULT_BASE_URL);
 
-        return self::fromConfig($config, $httpClient, $requestFactory, $streamFactory);
+        return self::fromConfig($config, $httpClient, $requestFactory, $streamFactory, $onResponse);
     }
 
-    /** Client pointed at the sandbox.billto.pl test environment. */
-    public static function sandbox(string $token, ?ClientInterface $httpClient = null): self
+    /**
+     * Client pointed at the sandbox.billto.pl test environment.
+     *
+     * @param  (callable(ApiResponse): void)|null  $onResponse
+     */
+    public static function sandbox(string $token, ?ClientInterface $httpClient = null, ?callable $onResponse = null): self
     {
-        return self::create($token, Config::SANDBOX_BASE_URL, $httpClient);
+        return self::create($token, Config::SANDBOX_BASE_URL, $httpClient, onResponse: $onResponse);
     }
 
+    /** @param (callable(ApiResponse): void)|null $onResponse */
     public static function fromConfig(
         Config $config,
         ?ClientInterface $httpClient = null,
         ?RequestFactoryInterface $requestFactory = null,
         ?StreamFactoryInterface $streamFactory = null,
+        ?callable $onResponse = null,
     ): self {
-        return new self($config, new Transport($config, $httpClient, $requestFactory, $streamFactory));
+        return new self($config, new Transport($config, $httpClient, $requestFactory, $streamFactory, $onResponse));
     }
 
     public function config(): Config

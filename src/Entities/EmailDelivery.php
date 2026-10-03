@@ -7,7 +7,7 @@ namespace BillTo\Entities;
 /**
  * Result of e-mailing an invoice.
  *
- * @property-read string $sent_to
+ * @property-read string|null $sent_to
  * @property-read string $sent_at
  * @property-read string $public_url
  */

@@ -22,7 +22,7 @@ final class Contractors extends Resource
      */
     public function list(array $filters = [], int $page = 1, int $perPage = 15): Page
     {
-        return $this->page('contractors', $filters + ['page' => $page, 'per_page' => $perPage], Contractor::class);
+        return $this->page('contractors', array_replace($filters, ['page' => $page, 'per_page' => $perPage]), Contractor::class);
     }
 
     /**

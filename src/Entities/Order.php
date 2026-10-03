@@ -9,6 +9,10 @@ use BillTo\Enums\OrderStatus;
 /**
  * Sales order.
  *
+ * @property-read string $source
+ * @property-read string|null $external_id
+ * @property-read string $display_number
+ * @property-read list<string> $integration_warnings
  * @property-read string $id
  * @property-read string|null $order_number
  * @property-read string $status draft|confirmed|closed|cancelled
@@ -19,14 +23,14 @@ use BillTo\Enums\OrderStatus;
  * @property-read string|null $notes
  * @property-read array{net: string, vat: string, gross: string} $totals
  * @property-read array{contractor_id: string|null, name: string|null, tax_number: string|null, email: string|null} $buyer
- * @property-read list<array<string, mixed>> $items
+ * @property-read list<array<string, mixed>>|null $items
  * @property-read bool $is_fully_invoiced
  * @property-read list<array<string, mixed>>|null $payment_schedule
  * @property-read int|null $next_installment_index
- * @property-read list<array{id: string, invoice_number: string|null, type: string, status: string, paid_at: string|null}> $invoices
+ * @property-read list<array{id: string, invoice_number: string|null, type: string, status: string, paid_at: string|null}>|null $invoices
  * @property-read array{sent_to: string|null, sent_at: string|null} $email_delivery
- * @property-read string $created_at
- * @property-read string $updated_at
+ * @property-read string|null $created_at
+ * @property-read string|null $updated_at
  */
 final class Order extends Entity
 {

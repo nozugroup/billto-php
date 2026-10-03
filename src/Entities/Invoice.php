@@ -10,6 +10,7 @@ use BillTo\Enums\InvoiceType;
 /**
  * Sales invoice.
  *
+ * @property-read string $effective_target
  * @property-read string $id
  * @property-read string $type VAT|KOR|ZAL|ROZ|KOR_ZAL|KOR_ROZ|OSS|KOR_OSS
  * @property-read string $status draft|issued|ksef_issued|ksef_issued_offline|cancelled
@@ -38,7 +39,7 @@ use BillTo\Enums\InvoiceType;
  * @property-read array{net: string, vat: string, gross: string, by_vat_rate: list<array{vat_type: string, net: string, vat: string, gross: string}>} $totals
  * @property-read array{basis: string, net: string, vat: string, gross: string}|null $economic
  * @property-read array<string, mixed>|null $correction
- * @property-read list<array<string, mixed>> $corrections
+ * @property-read list<array<string, mixed>>|null $corrections
  * @property-read array{is_ksef: bool, sent: bool, number: string|null, offline: bool, ksef_date: string|null} $ksef
  * @property-read string|null $paid_at
  * @property-read string $payment_status
@@ -46,16 +47,16 @@ use BillTo\Enums\InvoiceType;
  * @property-read string $remaining_amount
  * @property-read string|null $cancelled_at
  * @property-read string|null $cancellation_reason
- * @property-read list<array<string, mixed>> $payments
+ * @property-read list<array<string, mixed>>|null $payments
  * @property-read string|null $public_url
  * @property-read array{sent_to: string|null, sent_at: string|null, first_viewed_at: string|null} $email_delivery
  * @property-read array<string, mixed>|null $seller
  * @property-read array<string, mixed>|null $buyer
- * @property-read list<array<string, mixed>> $third_parties
- * @property-read list<array<string, mixed>> $items
+ * @property-read list<array<string, mixed>>|null $third_parties
+ * @property-read list<array<string, mixed>>|null $items
  * @property-read array<string, mixed>|null $margin
- * @property-read string $created_at
- * @property-read string $updated_at
+ * @property-read string|null $created_at
+ * @property-read string|null $updated_at
  */
 final class Invoice extends Entity
 {

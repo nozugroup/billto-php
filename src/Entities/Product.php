@@ -21,9 +21,9 @@ namespace BillTo\Entities;
  * @property-read bool $track_stock
  * @property-read string|null $low_stock_threshold
  * @property-read bool $is_active
- * @property-read list<array{id: string, unit: string, quantity: string|float}> $packagings
- * @property-read string $created_at
- * @property-read string $updated_at
+ * @property-read list<array{id: string, unit: string, quantity: string|float}>|null $packagings
+ * @property-read string|null $created_at
+ * @property-read string|null $updated_at
  */
 final class Product extends Entity
 {

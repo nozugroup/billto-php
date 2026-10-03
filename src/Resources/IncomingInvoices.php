@@ -27,7 +27,7 @@ final class IncomingInvoices extends Resource
      */
     public function list(array $filters = [], int $page = 1, int $perPage = 50): Page
     {
-        return $this->page('incoming-invoices', $filters + ['page' => $page, 'per_page' => $perPage], IncomingInvoice::class);
+        return $this->page('incoming-invoices', array_replace($filters, ['page' => $page, 'per_page' => $perPage]), IncomingInvoice::class);
     }
 
     /**

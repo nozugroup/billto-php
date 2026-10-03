@@ -7,8 +7,10 @@ namespace BillTo\Entities;
 /**
  * Invoice party (seller / buyer) - a snapshot taken at issue time.
  *
+ * @property-read string|null $address_line_1
+ * @property-read string|null $address_line_2
  * @property-read string $role seller|buyer
- * @property-read string $name
+ * @property-read string|null $name
  * @property-read string|null $tax_type local|eu|noneu|none
  * @property-read string|null $tax_number
  * @property-read string|null $tax_country

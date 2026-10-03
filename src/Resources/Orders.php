@@ -28,7 +28,7 @@ final class Orders extends Resource
      */
     public function list(array $filters = [], int $page = 1, int $perPage = 15): Page
     {
-        return $this->page('orders', $filters + ['page' => $page, 'per_page' => $perPage], Order::class);
+        return $this->page('orders', array_replace($filters, ['page' => $page, 'per_page' => $perPage]), Order::class);
     }
 
     /**
@@ -122,7 +122,7 @@ final class Orders extends Resource
      *                           {@see Invoices::sendEmail()} later). Requires BillTo API from 2026-09-14.
      * @param  string|null  $seriesId  Active series of the team (matching the document type) to number the invoice from; null = the default series.
      * @param  string|null  $invoiceType  `vat` (default) or `oss` - OSS invoice for an EU consumer at the consumption country's rate.
-     * @param  string|null  $ossVatType  Consumption-country rate for OSS (e.g. "19", "13.5"); null = the standard rate of the buyer's country.
+     * @param  float|string|null  $ossVatType  Consumption-country rate for OSS (e.g. "19", "13.5"); null = the standard rate of the buyer's country.
      * @param  bool  $markPaid  false = issue the invoice unpaid (cash on delivery); record the payment later with {@see Invoices::markPaid()}.
      */
     public function markPaid(
@@ -131,7 +131,7 @@ final class Orders extends Resource
         bool $sendEmail = true,
         ?string $seriesId = null,
         ?string $invoiceType = null,
-        ?string $ossVatType = null,
+        float|string|null $ossVatType = null,
         bool $markPaid = true,
     ): Invoice {
         $payload = self::compact([
